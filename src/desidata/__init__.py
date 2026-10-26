@@ -30,6 +30,10 @@ from .client import (  # noqa: F401
     DesiDataError,
     DesiDataNotFound,
     DesiDataServerError,
+    DesiDataAuthenticationError,
+    DesiDataPermissionError,
+    DesiDataResponseError,
+    DesiDataSignedUrlError,
 )
 
 __all__ = [
@@ -47,6 +51,10 @@ __all__ = [
     "DesiDataConnectionError",
     "DesiDataNotFound",
     "DesiDataServerError",
+    "DesiDataAuthenticationError",
+    "DesiDataPermissionError",
+    "DesiDataResponseError",
+    "DesiDataSignedUrlError",
 ]
 
 

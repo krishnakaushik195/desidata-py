@@ -98,35 +98,37 @@ def test_fetch_catalog_builds_filter_url(monkeypatch):
 
 
 def test_fetch_csv_bytes_caches(monkeypatch, cache_dir):
+    monkeypatch.setenv("DD_TOKEN", "dd_live_" + "a" * 64)
     calls = []
 
     def fake_urlopen(request, timeout=None):
         calls.append(request.full_url)
-        return FakeResponse(b"col1,col2\n1,2\n")
+        return FakeResponse(b'{"download_url":"https://storage.example/file"}' if "/api/" in request.full_url else b"col1,col2\n1,2\n")
 
-    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(urllib.request.OpenerDirector, "open", lambda self, request, timeout=None: fake_urlopen(request, timeout))
 
     first = client.fetch_csv_bytes("some-dataset")
     second = client.fetch_csv_bytes("some-dataset")
 
     assert first == second == b"col1,col2\n1,2\n"
-    assert len(calls) == 1  # second call came from cache
+    assert len(calls) == 2  # second call came from cache
     assert (cache_dir / "some-dataset.csv").exists()
 
 
 def test_fetch_csv_bytes_refresh_bypasses_cache(monkeypatch, cache_dir):
+    monkeypatch.setenv("DD_TOKEN", "dd_live_" + "a" * 64)
     calls = []
 
     def fake_urlopen(request, timeout=None):
         calls.append(request.full_url)
-        return FakeResponse(b"a\n1\n")
+        return FakeResponse(b'{"download_url":"https://storage.example/file"}' if "/api/" in request.full_url else b"a\n1\n")
 
-    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(urllib.request.OpenerDirector, "open", lambda self, request, timeout=None: fake_urlopen(request, timeout))
 
     client.fetch_csv_bytes("some-dataset")
     client.fetch_csv_bytes("some-dataset", refresh=True)
 
-    assert len(calls) == 2
+    assert len(calls) == 4
 
 
 def test_clear_cache_counts_removals(monkeypatch, cache_dir):

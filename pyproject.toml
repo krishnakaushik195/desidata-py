@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "desidata"
-version = "0.1.0"
+version = "0.1.1"
 description = "Load Indian datasets from desidata.in in one line — search the catalogue, download CSVs, get pandas DataFrames."
 readme = "README.md"
 requires-python = ">=3.9"

@@ -8,14 +8,15 @@ import desidata
 df = desidata.load("gender-policy-of-nabard-question-and-answer-dataset")
 ```
 
-That's it — no URL copying, no sign-in, no API key. You get a pandas
+Create a free token in DesiData Profile & settings and set `DD_TOKEN` in your
+environment before downloading. Public catalogue search needs no token. You get a pandas
 DataFrame of cleaned, India-focused public data: economy, agriculture,
 health, education, transport, demographics and more.
 
 ## Install
 
 ```bash
-pip install desidata
+pip install --upgrade "desidata[pandas]>=0.1.1"
 ```
 
 The core package has **zero dependencies**, so it installs instantly.
@@ -23,7 +24,7 @@ The core package has **zero dependencies**, so it installs instantly.
 exactly what to run if it is missing:
 
 ```bash
-pip install desidata pandas
+pip install --upgrade "desidata[pandas]>=0.1.1" pandas
 ```
 
 ## Usage
@@ -112,7 +113,7 @@ Environment overrides used by tests and local development:
 
 | Variable | Purpose |
 | --- | --- |
-| `DESIDATA_BASE_URL` | Point the client at a local/dev server |
+| `DESIDATA_BASE_URL` | Override the public catalogue API only; downloads require the trusted production origin |
 | `DESIDATA_CACHE_DIR` | Relocate the cache |
 | `DESIDATA_TIMEOUT` | Default request timeout in seconds |
 
@@ -130,3 +131,30 @@ twine upload dist/*
 
 MIT — see [LICENSE](LICENSE). The data itself belongs to its sources; each
 dataset page on [desidata.in](https://www.desidata.in) lists its source and licence.
+
+## Authenticated downloads (0.1.1)
+
+In a fresh Colab session:
+
+```python
+%pip install --upgrade "desidata[pandas]>=0.1.1"
+from google.colab import userdata
+import os
+os.environ["DD_TOKEN"] = userdata.get("DD_TOKEN")
+import desidata
+df = desidata.load("udise-2024-25-education-statistics-question-and-answer-dataset")
+df.head()
+```
+
+Enable notebook access to the DD_TOKEN secret. Restart the runtime after upgrading
+if desidata was already imported. Never print the token or signed download URLs.
+The SDK authenticates only to https://www.desidata.in, parses download_url JSON,
+and fetches the HTTPS file separately with no bearer header. Redirects are rejected
+on both requests. DESIDATA_BASE_URL overrides apply only to catalogue calls.
+
+Fresh cached CSVs remain usable offline without a token. Expired entries and
+refresh=True require authentication; failed refreshes preserve the old file.
+DesiDataAuthenticationError indicates a missing/invalid/revoked token;
+DesiDataPermissionError indicates API permission denial; DesiDataResponseError
+indicates malformed JSON or an unsafe file URL; DesiDataSignedUrlError indicates
+an expired or rejected storage link (retry with refresh=True).
